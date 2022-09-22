@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Records
+{% endblock %}
+
+{% block body %}
+<main>
+    <div class="container">
+        <h1>Records</h1>
+
+<table class="table">
+  <thead class="thead-light">
+    <tr>
+      <th scope="col"></th>
+      <th scope="col">User ID</th>
+      <th scope="col">Game</th>
+      <th scope="col">Win/Loss</th>
+      <th scope="col">Winning stat</th>
+      <th scope="col">Date</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for el in range(len) %}
+        <tr>
+            <th scope="row">{{ el + 1 }}</th>
+            <td>{{ statistics[el].user_id }}</td>
+            <td>{{ statistics[el].game }}</td>
+            <td>{{ statistics[el].win_loss }}</td>
+            <td>{{ statistics[el].winning_stat }}</td>
+            <td>{{ statistics[el].date.date() }}</td>
+        </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+    </div>
+
+</main>
+{% endblock %}
