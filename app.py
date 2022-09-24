@@ -1,30 +1,53 @@
-import logging
 from datetime import datetime
 
-from flask import Flask, render_template, request, redirect, flash, session, url_for, abort
+from flask import render_template, request, redirect, flash, session, url_for, abort, Flask
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.exc import IntegrityError
+from werkzeug.security import generate_password_hash, check_password_hash
 
 # from blueprints.basic_endpoints import blueprint as basic_endpoints
 
+
 app = Flask(__name__)
 # app.register_blueprint(basic_endpoints)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///statistics.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///DataBase.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = 'fgefsfdeg3r23rf5g6h73g'
 
 db = SQLAlchemy(app)
 
+db.create_all()
+
 
 class Statistic(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('statistic.user_id'), nullable=False)
     game = db.Column(db.String(50), nullable=False)
     win_loss = db.Column(db.String(50), nullable=False)
     winning_stat = db.Column(db.Integer, nullable=False)
     date = db.Column(db.DateTime, default=datetime.utcnow)
 
     def __repr__(self):
-        return '<Article %r>' % self.id
+        return '<Stat %r>' % self.id
+
+
+class Users(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    login = db.Column(db.String, nullable=False)
+    password = db.Column(db.String, nullable=False)
+    email = db.Column(db.String, nullable=False, unique=True)
+    image = db.Column(db.LargeBinary, nullable=True, default=None)
+
+    def __repr__(self):
+        return '<Article %r>' % self.user_id
+
+
+def chech_acc(login, psw):
+    users = Users.query.order_by(Users.id).all()
+    for u in users:
+        if u.login == login and check_password_hash(u.password, psw):
+            return True
+    return False
 
 
 @app.route('/')
@@ -39,8 +62,8 @@ def about():
 
 @app.route('/records')
 def records():
-    statistics = Statistic.query.order_by(Statistic.date.desc()).all()
-    return render_template("records.html", statistics=statistics, len=len(statistics))
+    statistics = Statistic.query.order_by(Statistic.date).all()
+    return render_template("records.html", statistics=statistics)
 
 
 @app.route('/contact', methods=['POST', "GET"])
@@ -51,7 +74,7 @@ def contact():
         email = request.form['email']
         message = request.form['message']
         print(name + ' ---- ' + email + ' ---- ' + message)
-        if len(message) > 0:
+        if len(message) > 2:
             flash('Message successfully sent!', category='success')
         else:
             flash('Error!', category='error')
@@ -101,10 +124,46 @@ def tic_tac_toe():
 def login():
     if 'userLogged' in session:
         return redirect(url_for('user', name=session['userLogged']))
-    elif request.method == 'POST' and request.form['login'] == 'selfedu' and request.form['psw'] == '123':
-        session['userLogged'] = request.form['login']
-        return redirect(url_for('user', name=session['userLogged']))
+    if request.method == 'POST':
+        if chech_acc(request.form['login'], request.form['psw']):
+            session['userLogged'] = request.form['login']
+            flash('Success!', category='success')
+            return redirect(url_for('user', name=session['userLogged']))
+        flash('Error! Account not found!', category='error')
     return render_template('login.html')
+
+
+@app.route('/sign_out')
+def sign_out():
+    if 'userLogged' in session:
+        session.pop('userLogged')
+    return redirect('/')
+
+
+@app.route('/registration', methods=["POST", "GET"])
+def registration():
+    if request.method == 'POST':
+        login = request.form['login'].strip()
+        password = request.form['psw'].strip()
+        password_2 = request.form['psw2'].strip()
+        email = request.form['email'].strip()
+        if password == password_2:
+            info = Users(login=login, password=generate_password_hash(password), email=email)
+            try:
+                db.session.add(info)
+                db.session.commit()
+            except Exception as ex:
+                db.session.rollback()
+                if type(ex) == IntegrityError:
+                    flash(f'User with this email already exists !!!', category='error')
+                    return render_template('registration.html')
+                flash(f'Error with database {ex} !!!', category='error')
+                return render_template('registration.html')
+            flash('Your account has been successfully registered!', category='success')
+            session['userLogged'] = login
+            return redirect(url_for('user', name=login))
+        flash('Error! Passwords dont match!!!', category='error')
+    return render_template('registration.html')
 
 
 @app.route('/user/<string:name>')
@@ -115,12 +174,12 @@ def user(name):
 
 
 @app.errorhandler(404)
-def pageNotFound(error):
+def pageNotFound():
     return render_template("404.html")
 
 
 @app.errorhandler(401)
-def pageNotFound(error):
+def pageNotFound():
     return render_template("401.html")
 
 

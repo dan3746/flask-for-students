@@ -21,14 +21,14 @@ Records
     </tr>
   </thead>
   <tbody>
-    {% for el in range(len) %}
+    {% for el in statistics %}
         <tr>
-            <th scope="row">{{ el + 1 }}</th>
-            <td>{{ statistics[el].user_id }}</td>
-            <td>{{ statistics[el].game }}</td>
-            <td>{{ statistics[el].win_loss }}</td>
-            <td>{{ statistics[el].winning_stat }}</td>
-            <td>{{ statistics[el].date.date() }}</td>
+            <th scope="row">{{ el.id }}</th>
+            <td>{{ el.user_id }}</td>
+            <td>{{ el.game }}</td>
+            <td>{{ el.win_loss }}</td>
+            <td>{{ el.winning_stat }}</td>
+            <td>{{ el.date.date() }}</td>
         </tr>
     {% endfor %}
   </tbody>
