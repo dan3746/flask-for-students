@@ -1,21 +1,19 @@
+import json
+import time
 from datetime import datetime
 
+import jsonpickle as jsonpickle
 from flask import render_template, request, redirect, flash, session, url_for, abort, Flask
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.exc import IntegrityError
 from werkzeug.security import generate_password_hash, check_password_hash
 
-# from blueprints.basic_endpoints import blueprint as basic_endpoints
-
-
 app = Flask(__name__)
-# app.register_blueprint(basic_endpoints)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///DataBase.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = 'fgefsfdeg3r23rf5g6h73g'
 
 db = SQLAlchemy(app)
-
 db.create_all()
 
 
@@ -38,16 +36,14 @@ class Users(db.Model):
     email = db.Column(db.String, nullable=False, unique=True)
     image = db.Column(db.LargeBinary, nullable=True, default=None)
 
-    def __repr__(self):
-        return '<Article %r>' % self.user_id
 
-
-def chech_acc(login, psw):
-    users = Users.query.order_by(Users.id).all()
-    for u in users:
-        if u.login == login and check_password_hash(u.password, psw):
-            return True
-    return False
+def get_acc(login, psw=None):
+    user = Users.query.where(Users.login == login).limit(1)
+    if psw and check_password_hash(user[0].password, psw):
+        return user[0]
+    if not psw and user[0]:
+        return user[0]
+    return None
 
 
 @app.route('/')
@@ -123,12 +119,15 @@ def tic_tac_toe():
 @app.route('/login', methods=["POST", "GET"])
 def login():
     if 'userLogged' in session:
-        return redirect(url_for('user', name=session['userLogged']))
+        return redirect(url_for('user', user_name=session['login']))
     if request.method == 'POST':
-        if chech_acc(request.form['login'], request.form['psw']):
-            session['userLogged'] = request.form['login']
+        user = get_acc(request.form['login'], request.form['psw'])
+        if user:
+            session['login'] = user.login
+            session['userLogged'] = jsonpickle.encode(user)
             flash('Success!', category='success')
-            return redirect(url_for('user', name=session['userLogged']))
+            return redirect(url_for('user', user_name=session['login']))
+
         flash('Error! Account not found!', category='error')
     return render_template('login.html')
 
@@ -160,17 +159,20 @@ def registration():
                 flash(f'Error with database {ex} !!!', category='error')
                 return render_template('registration.html')
             flash('Your account has been successfully registered!', category='success')
-            session['userLogged'] = login
-            return redirect(url_for('user', name=login))
+            session['login'] = info.login
+            session['userLogged'] = jsonpickle.encode(info)
+            return redirect(url_for('user', user_name=session['login']))
         flash('Error! Passwords dont match!!!', category='error')
     return render_template('registration.html')
 
 
-@app.route('/user/<string:name>')
-def user(name):
-    if 'userLogged' not in session or session['userLogged'] != name:
-        abort(401)
-    return 'User page: ' + name
+@app.route('/user/<string:user_name>')
+def user(user_name):
+    if 'userLogged' in session:
+        user = jsonpickle.decode(session['userLogged'])
+        if user.login == user_name:
+            return render_template('user.html', user=user)
+    abort(401)
 
 
 @app.errorhandler(404)
@@ -179,7 +181,7 @@ def pageNotFound():
 
 
 @app.errorhandler(401)
-def pageNotFound():
+def noAccess():
     return render_template("401.html")
 
 

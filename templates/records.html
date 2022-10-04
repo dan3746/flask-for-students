@@ -7,34 +7,35 @@ Records
 {% block body %}
 <main>
     <div class="container">
-        <h1>Records</h1>
-
-<table class="table">
-  <thead class="thead-light">
-    <tr>
-      <th scope="col"></th>
-      <th scope="col">User ID</th>
-      <th scope="col">Game</th>
-      <th scope="col">Win/Loss</th>
-      <th scope="col">Winning stat</th>
-      <th scope="col">Date</th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for el in statistics %}
-        <tr>
-            <th scope="row">{{ el.id }}</th>
-            <td>{{ el.user_id }}</td>
-            <td>{{ el.game }}</td>
-            <td>{{ el.win_loss }}</td>
-            <td>{{ el.winning_stat }}</td>
-            <td>{{ el.date.date() }}</td>
-        </tr>
-    {% endfor %}
-  </tbody>
-</table>
-
+    <h1>Records</h1>
+    {% if statistics %}
+        <table class="table">
+          <thead class="thead-light">
+            <tr>
+              <th scope="col"></th>
+              <th scope="col">User ID</th>
+              <th scope="col">Game</th>
+              <th scope="col">Win/Loss</th>
+              <th scope="col">Winning stat</th>
+              <th scope="col">Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for el in statistics %}
+                <tr>
+                    <th scope="row">{{ el.id }}</th>
+                    <td>{{ el.user_id }}</td>
+                    <td>{{ el.game }}</td>
+                    <td>{{ el.win_loss }}</td>
+                    <td>{{ el.winning_stat }}</td>
+                    <td>{{ el.date.date() }}</td>
+                </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+    {% else %}
+        <h2>There is no records!</h2>
+    {% endif %}
     </div>
-
 </main>
 {% endblock %}
