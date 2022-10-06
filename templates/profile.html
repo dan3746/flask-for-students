@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Profile
+{% endblock %}
+
+{% block body %}
+ <div class="container">
+        {% if user %}
+            <table border="0" class="profile-table">
+                <tr><td valign="top">
+                    <div class="profile-ava"><img src="{{ url_for('userava')}}"></div>
+                    <div class="profile-load">
+                        <form action="{{ url_for('upload') }}" method="post" enctype="multipart/form-data">
+                            <p><input type="file" name="file"></p>
+                            <p><input type="submit" value="Upload"></p>
+                        </form>
+                    </div>
+                </td>
+                <td valign="top" class="profile-panel">
+                    <ul class="profile-info">
+                    <li>Login: {{ user.login }}</li>
+                    <li>Email: {{ user.email }}</li>
+                    <p><a type="button" class="btn btn-danger"  href="/sign_out" role="button">Sign out</a>
+                    </ul>
+
+                </td>
+                </tr>
+            </table>
+        {% else %}
+            <h2>There is no info!</h2>
+        {% endif %}
+    </div>
+{% endblock %}

@@ -35,6 +35,9 @@
     </div>
   </nav>
   <div class="container">
+    {% for cat, msg in get_flashed_messages(True) %}
+      <div class="flash {{ cat }}">{{ msg }}</div>
+    {% endfor %}
     {% block body %}{% endblock %}
   </div>
 
