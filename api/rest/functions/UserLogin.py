@@ -1,3 +1,4 @@
+from flask import url_for
 from flask_login import UserMixin
 
 
@@ -18,3 +19,17 @@ class UserLogin(UserMixin):
     def get_login(self):
         return self.user.login
 
+    def get_user_image(self, app):
+        img = None
+        if self.user.image:
+            img = self.user.image
+        else:
+            try:
+                with app.open_resource(app.root_path + url_for(
+                        'static',
+                        filename='images/base_user_image.png'
+                ), "rb") as f:
+                    img = f.read()
+            except FileNotFoundError as e:
+                print(f"File was not found: {e}")
+        return img

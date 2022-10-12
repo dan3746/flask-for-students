@@ -29,7 +29,11 @@
           </li>
         </ul>
         <form class="d-flex" role="search">
-          <a type="button" class="btn btn-success"  href="/login" role="button">Login</a>
+            {% if user %}
+              <a type="button" class="btn btn-danger"  href="/sign_out" role="button">Sign out</a>
+            {% else %}
+              <a type="button" class="btn btn-success"  href="/login" role="button">Login</a>
+            {% endif %}
         </form>
       </div>
     </div>

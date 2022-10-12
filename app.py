@@ -1,16 +1,13 @@
-import base64
-import sqlite3
 from datetime import datetime
 
-import jsonpickle
-from PIL import Image
-from flask import render_template, request, redirect, flash, session, url_for, abort, make_response, Flask
+from flask import render_template, request, redirect, flash, url_for, make_response, Flask
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.exc import IntegrityError
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 
 from rest.functions.UserLogin import UserLogin
+from rest.functions.images import image_is_png
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///DataBase.db'
@@ -44,9 +41,7 @@ class Users(db.Model):
 
 @login_manager.user_loader
 def load_user(user_id):
-    print("load_user")
     return UserLogin().fromDB(user_id, Users)
-
 
 
 @app.route('/')
@@ -99,30 +94,10 @@ def add_record():
         return render_template("add_record.html")
 
 
-@app.route('/durak')
-def durak():
-    return render_template("durak.html")
-
-
-@app.route('/minesweeper')
-def minesweeper():
-    return render_template("minesweeper.html")
-
-
-@app.route('/poker')
-def poker():
-    return render_template("poker.html")
-
-
-@app.route('/tic_tac_toe')
-def tic_tac_toe():
-    return render_template("tic-tac-toe.html")
-
-
 @app.route('/login', methods=["POST", "GET"])
 def login():
     if current_user.is_authenticated:
-        return redirect(url_for('user', user_name=current_user.get_login()))
+        return redirect(url_for('profile'))
     if request.method == 'POST':
         user = Users.query.where(Users.login == request.form['login']).limit(1)
         if user[0] and check_password_hash(user[0].password, request.form['psw']):
@@ -130,7 +105,7 @@ def login():
             rm = True if request.form.get('remainme') else False
             login_user(user_login, remember=rm)
             flash('Success!', category='success')
-            return redirect(url_for('user', user_name=current_user.get_login()))
+            return redirect(url_for('profile'))
         flash('Error! Account not found!', category='error')
     return render_template('login.html')
 
@@ -154,6 +129,7 @@ def registration():
             try:
                 db.session.add(info)
                 db.session.commit()
+                login_user(UserLogin().create(info))
             except Exception as ex:
                 db.session.rollback()
                 if type(ex) == IntegrityError:
@@ -162,103 +138,48 @@ def registration():
                 flash(f'Error with database {ex} !!!', category='error')
                 return render_template('registration.html')
             flash('Your account has been successfully registered!', category='success')
-            session['login'] = info.login
-            session['userLogged'] = jsonpickle.encode(info)
-            return redirect(url_for('user', user_name=session['login']))
+            return redirect(url_for('profile'))
         flash('Error! Passwords dont match!!!', category='error')
     return render_template('registration.html')
 
 
-@app.route('/user/<string:user_name>')
+@app.route('/profile')
 @login_required
-def user(user_name):
-    user = current_user.user
-    if user.login == user_name:
-        return render_template('profile.html', user=user)
-    abort(401)
+def profile():
+    return render_template('profile.html', user=current_user.user)
 
 
 @app.route('/userava')
+@login_required
 def userava():
-    if 'userLogged' in session:
-        user = jsonpickle.decode(session['userLogged'])
-        img = get_user_image(user)
-        h = make_response(img)
-        h.headers['Content-Type'] = 'image/png'
-        return h
+    img = current_user.get_user_image(app)
+    if not img:
+        return ""
 
-
-def get_user_image(user):
-    img = None
-    if user.image:
-        img = user.image
-    else:
-        try:
-            with app.open_resource(app.root_path + url_for('static', filename='images/base_user_image.png'), "rb") as f:
-                img = f.read()
-        except FileNotFoundError as e:
-            print(f"File was not found: {e}")
-    return img
+    h = make_response(img)
+    h.headers['Content-Type'] = 'image/png'
+    return h
 
 
 @app.route('/upload', methods=["POST", "GET"])
+@login_required
 def upload():
     if request.method == 'POST':
         file = request.files['file']
         if file:
-            file = image_is_png(file)
+            file = image_is_png(file, app)
             if file:
                 res = update_user(image=file)
                 if res:
                     flash("Success!", "success")
-                    return redirect(url_for('user', user_name=session['login']))
+                    return redirect(url_for('profile'))
                 flash("Error while updating user image!" "error")
             else:
                 flash("Error while reading image file!" "error")
         else:
             flash("No new file for update!" "error")
 
-    return redirect(url_for('user', user_name=session['login']))
-
-
-def image_is_png(img):
-    try:
-        ext = img.filename.rsplit('.', 1)[1]
-        if ext == "png" or ext == "PNG":
-            return img
-        im = Image.open(img)
-        filename = img.filename.rsplit('.', 1)[0]
-        im.save(f'{filename}.png')
-        return im
-    except Exception as ex:
-        print(f"Error with image: {ex}")
-        return None
-
-
-def update_user(login=None, psw=None, email=None, image=None):
-    user = get_acc(session['login'])
-    if login:
-        user.login = login
-    if psw:
-        user.password = psw
-    if email:
-        user.email = email
-    if image:
-        binary_image = sqlite3.Binary(image.read())
-        user.image = binary_image
-    try:
-        db.session.commit()
-        user.image = image
-        session['login'] = user.login
-        session['userLogged'] = jsonpickle.encode(user)
-    except Exception as ex:
-        db.session.rollback()
-        if type(ex) == IntegrityError:
-            flash(f'User with this login or email already exists !!!', category='error')
-            return False
-        flash(f'Error with database {ex} !!!', category='error')
-        return False
-    return True
+    return redirect(url_for('profile'))
 
 
 @app.errorhandler(404)
@@ -269,6 +190,49 @@ def pageNotFound():
 @app.errorhandler(401)
 def noAccess():
     return render_template("401.html")
+
+
+@app.route('/durak')
+def durak():
+    return render_template("durak.html")
+
+
+@app.route('/minesweeper')
+def minesweeper():
+    return render_template("minesweeper.html")
+
+
+@app.route('/poker')
+def poker():
+    return render_template("poker.html")
+
+
+@app.route('/tic_tac_toe')
+def tic_tac_toe():
+    return render_template("tic-tac-toe.html")
+
+
+def update_user(login=None, psw=None, email=None, image=None):
+    user = current_user.user
+    if login:
+        user.login = login
+    if psw:
+        user.password = psw
+    if email:
+        user.email = email
+    if image:
+        user.image = image
+    try:
+        db.session.commit()
+        login_user.user = user
+    except Exception as ex:
+        db.session.rollback()
+        if type(ex) == IntegrityError:
+            flash(f'User with this login or email already exists !!!', category='error')
+            return False
+        flash(f'Error with database {ex} !!!', category='error')
+        return False
+    return True
 
 
 if __name__ == '__main__':
