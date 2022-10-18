@@ -8,23 +8,19 @@ Login
 
 <main class="form-signin w-100 m-auto text-center">
   <form action="" method="post" class="form-contact">
+    {{ form.hidden_tag() }}
     <h1 class="h3 mb-3 fw-normal">Please sign in</h1>
-
     <div class="form-floating">
-      <input type="text" name="login" class="form-control" id="floatingInput" placeholder="Login" required>
-      <label for="floatingInput">Login</label>
+      <p>{{ form.login.label() }} {{ form.login() }}
     </div>
     <div class="form-floating">
-      <input type="password" name="psw" class="form-control" id="floatingPassword" placeholder="Password" required>
-      <label for="floatingPassword">Password</label>
+      <p>{{ form.psw.label() }} {{ form.psw() }}
     </div>
     <div class="checkbox mb-3">
-      <label>
-        <input type="checkbox" name="remainme"> Remember me
-      </label>
+      <p> {{ form.remember.label() }} {{ form.remember() }}
     </div>
     <button class="w-100 btn btn-lg btn-primary" type="submit">
-        Sign in
+        {{ form.submit() }}
     </button>
     <p>Don't have an account? <a href="/registration">Register </a>now!</p>
   </form>

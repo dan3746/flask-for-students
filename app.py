@@ -7,6 +7,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 
 from rest.functions.UserLogin import UserLogin
+from rest.functions.forms import LoginForm, RegistrationForm
 from rest.functions.images import image_is_png
 
 app = Flask(__name__)
@@ -98,16 +99,20 @@ def add_record():
 def login():
     if current_user.is_authenticated:
         return redirect(url_for('profile'))
-    if request.method == 'POST':
-        user = Users.query.where(Users.login == request.form['login']).limit(1)
-        if user[0] and check_password_hash(user[0].password, request.form['psw']):
+    form = LoginForm()
+    if form.validate_on_submit():
+        user = Users.query.where(Users.login == form.login.data).limit(1)
+        try:
+            user = user[0]
+        except IndexError as er:
+            user = None
+        if user and check_password_hash(user[0].password, form.psw.data):
             user_login = UserLogin().create(user[0])
-            rm = True if request.form.get('remainme') else False
-            login_user(user_login, remember=rm)
+            login_user(user_login, remember=form.remember.data)
             flash('Success!', category='success')
             return redirect(url_for('profile'))
         flash('Error! Account not found!', category='error')
-    return render_template('login.html')
+    return render_template("login.html", form=form)
 
 
 @app.route('/sign_out')
@@ -119,28 +124,26 @@ def sign_out():
 
 @app.route('/registration', methods=["POST", "GET"])
 def registration():
-    if request.method == 'POST':
-        login = request.form['login'].strip()
-        password = request.form['psw'].strip()
-        password_2 = request.form['psw2'].strip()
-        email = request.form['email'].strip()
-        if password == password_2:
-            info = Users(login=login, password=generate_password_hash(password), email=email)
-            try:
-                db.session.add(info)
-                db.session.commit()
-                login_user(UserLogin().create(info))
-            except Exception as ex:
-                db.session.rollback()
-                if type(ex) == IntegrityError:
-                    flash(f'User with this login or email already exists !!!', category='error')
-                    return render_template('registration.html')
-                flash(f'Error with database {ex} !!!', category='error')
+    form = RegistrationForm()
+    if form.validate_on_submit():
+        login = form.login.data
+        password = form.psw1.data
+        email = form.email.data
+        info = Users(login=login, password=generate_password_hash(password), email=email)
+        try:
+            db.session.add(info)
+            db.session.commit()
+            login_user(UserLogin().create(info))
+        except Exception as ex:
+            db.session.rollback()
+            if type(ex) == IntegrityError:
+                flash(f'User with this login or email already exists !!!', category='error')
                 return render_template('registration.html')
-            flash('Your account has been successfully registered!', category='success')
-            return redirect(url_for('profile'))
-        flash('Error! Passwords dont match!!!', category='error')
-    return render_template('registration.html')
+            flash(f'Error with database {ex} !!!', category='error')
+            return render_template('registration.html')
+        flash('Your account has been successfully registered!', category='success')
+        return redirect(url_for('profile'))
+    return render_template('registration.html', form=form)
 
 
 @app.route('/profile')

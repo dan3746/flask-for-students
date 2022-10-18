@@ -8,11 +8,22 @@ Registration
  <div class="container">
   <h1>Registration</h1>
      <form action="" method="post" class="form-contact">
-         <p><label>Login: </label> <input type="text" name="login" value="" required></p>
-         <p><label>Password: </label> <input type="password" name="psw" value="" required></p>
-         <p><label>Repeat password: </label> <input type="password" name="psw2" value="" required></p>
-         <p><label>E-mail: </label> <input type="text" name="email" value="" required></p>
-         <p><input type="submit" value="Log in"></p>
+       {{ form.hidden_tag() }}
+         {% for field in form if field.name not in ['csrf_token', 'remember', 'submit'] %}
+             <p>{{ field.label() }}
+              {% if field.errors %}
+                {{ field(class="invalod") }}
+              <span class="invalid-feedback">
+                  {% for e in field.errors %}
+                  {{ e }}
+                  {% endfor %}
+              </span>
+              {% else %}
+                {{ field() }}
+              {% endif %}
+         {% endfor %}
+
+         <p>{{ form.submit() }}
      </form>
  </div>
 {% endblock %}
