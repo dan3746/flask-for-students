@@ -30,7 +30,31 @@
         </ul>
         <form class="d-flex" role="search">
             {% if user %}
-              <a type="button" class="btn btn-danger"  href="/sign_out" role="button">Sign out</a>
+                <div class="flex-shrink-0 dropdown">
+                  <a href="#" class="d-block link-dark text-decoration-none dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                    <img src="https://github.com/mdo.png" alt="mdo" class="rounded-circle" width="32" height="32">
+                  </a>
+                  <ul class="dropdown-menu text-small shadow" style="">
+                    <li><a class="dropdown-item" href="#">New project...</a></li>
+                    <li><a class="dropdown-item" href="#">Settings</a></li>
+                    <li><a class="dropdown-item" href="#">Profile</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="#">Sign out</a></li>
+                  </ul>
+                </div>
+
+                <div class="flex-shrink-0 dropdown">
+                  <a href="#" class="d-block link-dark text-decoration-none dropdown-toggle show" data-bs-toggle="dropdown" aria-expanded="true">
+                    <img src="https://github.com/mdo.png" alt="mdo" class="rounded-circle" width="32" height="32">
+                  </a>
+                  <ul class="dropdown-menu text-small shadow show" style="position: absolute; inset: auto 0px 0px auto; margin: 0px; transform: translate(0px, 34px);" data-popper-placement="top-end">
+                    <li><a class="dropdown-item" href="#">New project...</a></li>
+                    <li><a class="dropdown-item" href="#">Settings</a></li>
+                    <li><a class="dropdown-item" href="#">Profile</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="#">Sign out</a></li>
+                  </ul>
+                </div>
             {% else %}
               <a type="button" class="btn btn-success"  href="/login" role="button">Login</a>
             {% endif %}

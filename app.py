@@ -40,6 +40,10 @@ class Users(db.Model):
     image = db.Column(db.LargeBinary, nullable=True, default=None)
 
 
+def user_is_logged():
+    return current_user.user if current_user.is_authenticated else None
+
+
 @login_manager.user_loader
 def load_user(user_id):
     return UserLogin().fromDB(user_id, Users)
@@ -47,18 +51,18 @@ def load_user(user_id):
 
 @app.route('/')
 def index():
-    return render_template("index.html")
+    return render_template("index.html", user=user_is_logged())
 
 
 @app.route('/about')
 def about():
-    return render_template("about.html")
+    return render_template("about.html", user=user_is_logged())
 
 
 @app.route('/records')
 def records():
     statistics = Statistic.query.order_by(Statistic.date).all()
-    return render_template("records.html", statistics=statistics)
+    return render_template("records.html", statistics=statistics, user=user_is_logged())
 
 
 @app.route('/contact', methods=['POST', "GET"])
@@ -73,7 +77,7 @@ def contact():
             flash('Message successfully sent!', category='success')
         else:
             flash('Error!', category='error')
-    return render_template("contact.html")
+    return render_template("contact.html", user=user_is_logged())
 
 
 @app.route('/add_record', methods=['POST'])
@@ -92,7 +96,7 @@ def add_record():
         except Exception as ex:
             return "Error during saving progress in db: " + ex
     else:
-        return render_template("add_record.html")
+        return render_template("add_record.html", user=user_is_logged())
 
 
 @app.route('/login', methods=["POST", "GET"])
@@ -106,13 +110,13 @@ def login():
             user = user[0]
         except IndexError as er:
             user = None
-        if user and check_password_hash(user[0].password, form.psw.data):
-            user_login = UserLogin().create(user[0])
+        if user and check_password_hash(user.password, form.psw.data):
+            user_login = UserLogin().create(user)
             login_user(user_login, remember=form.remember.data)
             flash('Success!', category='success')
             return redirect(url_for('profile'))
         flash('Error! Account not found!', category='error')
-    return render_template("login.html", form=form)
+    return render_template("login.html", form=form, user=user_is_logged())
 
 
 @app.route('/sign_out')
@@ -138,12 +142,12 @@ def registration():
             db.session.rollback()
             if type(ex) == IntegrityError:
                 flash(f'User with this login or email already exists !!!', category='error')
-                return render_template('registration.html')
+                return render_template('registration.html', user=user_is_logged())
             flash(f'Error with database {ex} !!!', category='error')
-            return render_template('registration.html')
+            return render_template('registration.html', user=user_is_logged())
         flash('Your account has been successfully registered!', category='success')
         return redirect(url_for('profile'))
-    return render_template('registration.html', form=form)
+    return render_template('registration.html', form=form, user=user_is_logged())
 
 
 @app.route('/profile')
