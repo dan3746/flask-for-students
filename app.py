@@ -1,43 +1,20 @@
-from datetime import datetime
-
-from flask import render_template, request, redirect, flash, url_for, make_response, Flask
-from flask_sqlalchemy import SQLAlchemy
+from flask import render_template, request, redirect, flash, url_for, make_response
 from sqlalchemy.exc import IntegrityError
 from werkzeug.security import generate_password_hash, check_password_hash
-from flask_login import LoginManager, login_user, login_required, logout_user, current_user
+from flask_login import login_user, login_required, logout_user, current_user
 
+from rest.base import login_manager, app
 from rest.functions.UserLogin import UserLogin
 from rest.functions.forms import LoginForm, RegistrationForm
 from rest.functions.images import image_is_png
-
-app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///DataBase.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SECRET_KEY'] = 'fgefsfdeg3r23rf5g6h73g'
-login_manager = LoginManager(app)
-db = SQLAlchemy(app)
+from rest.models.db_classes import Users, Statistic, db
+from api.blueprints.admin.admin import admin
+from api.blueprints.main_page.main_page import main_page
 
 MAX_CONTENT_LENGTH = 1024 * 1024
 
-
-class Statistic(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('statistic.user_id'), nullable=False)
-    game = db.Column(db.String(50), nullable=False)
-    win_loss = db.Column(db.String(50), nullable=False)
-    winning_stat = db.Column(db.Integer, nullable=False)
-    date = db.Column(db.DateTime, default=datetime.utcnow)
-
-    def __repr__(self):
-        return '<Stat %r>' % self.id
-
-
-class Users(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    login = db.Column(db.String, nullable=False)
-    password = db.Column(db.String, nullable=False)
-    email = db.Column(db.String, nullable=False, unique=True)
-    image = db.Column(db.LargeBinary, nullable=True, default=None)
+app.register_blueprint(admin, url_prefix='/admin')
+app.register_blueprint(main_page, url_prefix='')
 
 
 def user_is_logged():
@@ -47,37 +24,6 @@ def user_is_logged():
 @login_manager.user_loader
 def load_user(user_id):
     return UserLogin().fromDB(user_id, Users)
-
-
-@app.route('/')
-def index():
-    return render_template("index.html", user=user_is_logged())
-
-
-@app.route('/about')
-def about():
-    return render_template("about.html", user=user_is_logged())
-
-
-@app.route('/records')
-def records():
-    statistics = Statistic.query.order_by(Statistic.date).all()
-    return render_template("records.html", statistics=statistics, user=user_is_logged())
-
-
-@app.route('/contact', methods=['POST', "GET"])
-def contact():
-    if request.method == "POST":
-        print(request.form)
-        name = request.form['username']
-        email = request.form['email']
-        message = request.form['message']
-        print(name + ' ---- ' + email + ' ---- ' + message)
-        if len(message) > 2:
-            flash('Message successfully sent!', category='success')
-        else:
-            flash('Error!', category='error')
-    return render_template("contact.html", user=user_is_logged())
 
 
 @app.route('/add_record', methods=['POST'])
@@ -97,57 +43,6 @@ def add_record():
             return "Error during saving progress in db: " + ex
     else:
         return render_template("add_record.html", user=user_is_logged())
-
-
-@app.route('/login', methods=["POST", "GET"])
-def login():
-    if current_user.is_authenticated:
-        return redirect(url_for('profile'))
-    form = LoginForm()
-    if form.validate_on_submit():
-        user = Users.query.where(Users.login == form.login.data).limit(1)
-        try:
-            user = user[0]
-        except IndexError as er:
-            user = None
-        if user and check_password_hash(user.password, form.psw.data):
-            user_login = UserLogin().create(user)
-            login_user(user_login, remember=form.remember.data)
-            flash('Success!', category='success')
-            return redirect(url_for('profile'))
-        flash('Error! Account not found!', category='error')
-    return render_template("login.html", form=form, user=user_is_logged())
-
-
-@app.route('/sign_out')
-def sign_out():
-    logout_user()
-    flash('Logout successfully!', category='success')
-    return redirect('/')
-
-
-@app.route('/registration', methods=["POST", "GET"])
-def registration():
-    form = RegistrationForm()
-    if form.validate_on_submit():
-        login = form.login.data
-        password = form.psw1.data
-        email = form.email.data
-        info = Users(login=login, password=generate_password_hash(password), email=email)
-        try:
-            db.session.add(info)
-            db.session.commit()
-            login_user(UserLogin().create(info))
-        except Exception as ex:
-            db.session.rollback()
-            if type(ex) == IntegrityError:
-                flash(f'User with this login or email already exists !!!', category='error')
-                return render_template('registration.html', user=user_is_logged())
-            flash(f'Error with database {ex} !!!', category='error')
-            return render_template('registration.html', user=user_is_logged())
-        flash('Your account has been successfully registered!', category='success')
-        return redirect(url_for('profile'))
-    return render_template('registration.html', form=form, user=user_is_logged())
 
 
 @app.route('/profile')
