@@ -49,7 +49,7 @@ def contact():
 @main_page.route('/login', methods=["POST", "GET"])
 def login():
     if current_user.is_authenticated:
-        return redirect(url_for('profile'))
+        return redirect(url_for('admin.profile'))
     form = LoginForm()
     if form.validate_on_submit():
         user = Users.query.where(Users.login == form.login.data).limit(1)
@@ -61,7 +61,7 @@ def login():
             user_login = UserLogin().create(user)
             login_user(user_login, remember=form.remember.data)
             flash('Success!', category='success')
-            return redirect(url_for('profile'))
+            return redirect(url_for('admin.profile'))
         flash('Error! Account not found!', category='error')
     return render_template("main_page/login.html", form=form, user=user_is_logged())
 
@@ -82,12 +82,12 @@ def registration():
             db.session.rollback()
             if type(ex) == IntegrityError:
                 flash(f'User with this login or email already exists !!!', category='error')
-                return render_template('templates/main_page/registration.html', user=user_is_logged())
+                return render_template('main_page/registration.html', user=user_is_logged())
             flash(f'Error with database {ex} !!!', category='error')
-            return render_template('templates/main_page/registration.html', user=user_is_logged())
+            return render_template('main_page/registration.html', user=user_is_logged())
         flash('Your account has been successfully registered!', category='success')
-        return redirect(url_for('profile'))
-    return render_template('templates/main_page/registration.html', form=form, user=user_is_logged())
+        return redirect(url_for('admin.profile'))
+    return render_template('main_page/registration.html', form=form, user=user_is_logged())
 
 
 @main_page.route('/sign_out')

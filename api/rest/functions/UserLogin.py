@@ -25,10 +25,7 @@ class UserLogin(UserMixin):
             img = self.user.image
         else:
             try:
-                with app.open_resource(app.root_path + url_for(
-                        'static',
-                        filename='images/base_user_image.png'
-                ), "rb") as f:
+                with app.open_resource(app.blueprints['admin'].static_folder + f'/images/base_user_image.png', "rb") as f:
                     img = f.read()
             except FileNotFoundError as e:
                 print(f"File was not found: {e}")
