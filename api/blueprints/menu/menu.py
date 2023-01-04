@@ -4,34 +4,34 @@ from flask import Blueprint, render_template, request, flash, redirect, url_for
 from flask_login import current_user, login_user, logout_user
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from rest.functions.UserLogin import UserLogin
-from rest.functions.forms import LoginForm, RegistrationForm
-from rest.models.db_classes import Statistic, Users, db
+from api.rest.functions.UserLogin import UserLogin
+from api.rest.functions.forms import LoginForm, RegistrationForm
+from api.rest.models.db_classes import Statistic, Users, db
 
-main_page = Blueprint('main_page', __name__, template_folder='templates', static_folder='static')
+menu = Blueprint('menu', __name__, template_folder='templates', static_folder='static')
 
 
 def user_is_logged():
     return current_user.user if current_user.is_authenticated else None
 
 
-@main_page.route('/')
+@menu.route('/')
 def index():
-    return render_template("main_page/index.html", user=user_is_logged())
+    return render_template("menu/index.html", user=user_is_logged())
 
 
-@main_page.route('/about')
+@menu.route('/about')
 def about():
-    return render_template("main_page/about.html", user=user_is_logged())
+    return render_template("menu/about.html", user=user_is_logged())
 
 
-@main_page.route('/records')
+@menu.route('/records')
 def records():
     statistics = Statistic.query.order_by(Statistic.date).all()
-    return render_template("main_page/records.html", statistics=statistics, user=user_is_logged())
+    return render_template("menu/records.html", statistics=statistics, user=user_is_logged())
 
 
-@main_page.route('/contact', methods=['POST', "GET"])
+@menu.route('/contact', methods=['POST', "GET"])
 def contact():
     if request.method == "POST":
         print(request.form)
@@ -43,10 +43,10 @@ def contact():
             flash('Message successfully sent!', category='success')
         else:
             flash('Error!', category='error')
-    return render_template("main_page/contact.html", user=user_is_logged())
+    return render_template("menu/contact.html", user=user_is_logged())
 
 
-@main_page.route('/login', methods=["POST", "GET"])
+@menu.route('/login', methods=["POST", "GET"])
 def login():
     if current_user.is_authenticated:
         return redirect(url_for('admin.profile'))
@@ -63,10 +63,10 @@ def login():
             flash('Success!', category='success')
             return redirect(url_for('admin.profile'))
         flash('Error! Account not found!', category='error')
-    return render_template("main_page/login.html", form=form, user=user_is_logged())
+    return render_template("menu/login.html", form=form, user=user_is_logged())
 
 
-@main_page.route('/registration', methods=["POST", "GET"])
+@menu.route('/registration', methods=["POST", "GET"])
 def registration():
     form = RegistrationForm()
     if form.validate_on_submit():
@@ -82,19 +82,26 @@ def registration():
             db.session.rollback()
             if type(ex) == IntegrityError:
                 flash(f'User with this login or email already exists !!!', category='error')
-                return render_template('main_page/registration.html', user=user_is_logged())
+                return render_template('menu/registration.html', user=user_is_logged())
             flash(f'Error with database {ex} !!!', category='error')
-            return render_template('main_page/registration.html', user=user_is_logged())
+            return render_template('menu/registration.html', user=user_is_logged())
         flash('Your account has been successfully registered!', category='success')
         return redirect(url_for('admin.profile'))
-    return render_template('main_page/registration.html', form=form, user=user_is_logged())
+    return render_template('menu/registration.html', form=form, user=user_is_logged())
 
 
-@main_page.route('/sign_out')
+@menu.route('/sign_out')
 def sign_out():
     logout_user()
     flash('Logout successfully!', category='success')
     return redirect('/')
 
 
+@menu.errorhandler(404)
+def page_not_found():
+    return render_template("404.html")
 
+
+@menu.errorhandler(401)
+def no_access():
+    return render_template("401.html")

@@ -2,10 +2,10 @@ from flask import Blueprint, render_template, make_response, request, flash, red
 from flask_login import login_required, current_user, login_user
 from sqlalchemy.exc import IntegrityError
 
-from rest.base import login_manager, app
-from rest.functions.UserLogin import UserLogin
-from rest.functions.images import image_is_png
-from rest.models.db_classes import Users, db
+from api.rest.base import login_manager, app
+from api.rest.functions.UserLogin import UserLogin
+from api.rest.functions.images import image_is_png
+from api.rest.models.db_classes import Users, db
 
 admin = Blueprint('admin', __name__, template_folder='templates', static_folder='static')
 
@@ -52,6 +52,16 @@ def upload():
             flash("No new file for update!", "error")
 
     return redirect(url_for('.profile'))
+
+
+@admin.errorhandler(404)
+def page_not_found():
+    return render_template("404.html")
+
+
+@admin.errorhandler(401)
+def no_access():
+    return render_template("401.html")
 
 
 def update_user(login=None, psw=None, email=None, image=None):

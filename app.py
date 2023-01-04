@@ -3,18 +3,18 @@ from sqlalchemy.exc import IntegrityError
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import login_user, login_required, logout_user, current_user
 
-from rest.base import login_manager, app
-from rest.functions.UserLogin import UserLogin
-from rest.functions.forms import LoginForm, RegistrationForm
-from rest.functions.images import image_is_png
-from rest.models.db_classes import Users, Statistic, db
+from api.rest.base import login_manager, app
+from api.rest.functions.UserLogin import UserLogin
+from api.rest.functions.forms import LoginForm, RegistrationForm
+from api.rest.functions.images import image_is_png
+from api.rest.models.db_classes import Users, Statistic, db
 from api.blueprints.admin.admin import admin
-from api.blueprints.main_page.main_page import main_page
+from api.blueprints.menu.menu import menu
 
 MAX_CONTENT_LENGTH = 1024 * 1024
 
 app.register_blueprint(admin, url_prefix='/admin')
-app.register_blueprint(main_page, url_prefix='')
+app.register_blueprint(menu, url_prefix='')
 
 
 def user_is_logged():

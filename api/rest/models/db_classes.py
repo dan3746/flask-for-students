@@ -2,7 +2,7 @@ from datetime import datetime
 
 from flask_sqlalchemy import SQLAlchemy
 
-from rest.base import app
+from api.rest.base import app
 
 db = SQLAlchemy(app)
 
