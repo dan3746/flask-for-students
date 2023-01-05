@@ -1,7 +1,7 @@
 from sqlite3 import IntegrityError
 
 from flask import Blueprint, render_template, request, flash, redirect, url_for
-from flask_login import current_user, login_user, logout_user
+from flask_login import current_user, login_user
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from api.rest.functions.UserLogin import UserLogin
@@ -88,13 +88,6 @@ def registration():
         flash('Your account has been successfully registered!', category='success')
         return redirect(url_for('admin.profile'))
     return render_template('menu/registration.html', form=form, user=user_is_logged())
-
-
-@menu.route('/sign_out')
-def sign_out():
-    logout_user()
-    flash('Logout successfully!', category='success')
-    return redirect('/')
 
 
 @menu.errorhandler(404)

@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, make_response, request, flash, redirect, url_for
-from flask_login import login_required, current_user, login_user
+from flask_login import login_required, current_user, login_user, logout_user
 from sqlalchemy.exc import IntegrityError
 
 from api.rest.base import login_manager, app
@@ -21,6 +21,16 @@ def profile():
     return render_template('admin/profile.html', user=current_user.user)
 
 
+@admin.route('/edit_user',  methods=["POST", "GET"])
+@login_required
+def edit_user():
+    if request.method == "POST":
+        if update_user(login=request.form['login'], email=request.form['email']):
+            flash("Success!", "success")
+            return redirect(url_for('.profile'))
+    return render_template('admin/edit_user.html', user=current_user.user)
+
+
 @admin.route('/userava')
 @login_required
 def userava():
@@ -33,16 +43,14 @@ def userava():
     return h
 
 
-@admin.route('/upload', methods=["POST", "GET"])
+@admin.route('/upload_image', methods=["POST", "GET"])
 @login_required
-def upload():
+def upload_image():
     if request.method == 'POST':
-        file = request.files['file']
-        if file:
-            file = image_is_png(file, app)
+        if request.files['image']:
+            file = image_is_png(request.files['image'], app)
             if file:
-                res = update_user(image=file)
-                if res:
+                if update_user(image=file):
                     flash("Success!", "success")
                     return redirect(url_for('.profile'))
                 flash("Error while updating user image!", "error")
@@ -52,6 +60,13 @@ def upload():
             flash("No new file for update!", "error")
 
     return redirect(url_for('.profile'))
+
+
+@admin.route('/sign_out')
+def sign_out():
+    logout_user()
+    flash('Logout successfully!', category='success')
+    return redirect('/')
 
 
 @admin.errorhandler(404)
@@ -85,3 +100,5 @@ def update_user(login=None, psw=None, email=None, image=None):
         flash(f'Error with database {ex} !!!', category='error')
         return False
     return True
+
+
