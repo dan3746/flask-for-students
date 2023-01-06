@@ -1,9 +1,11 @@
 from flask import Blueprint, render_template, make_response, request, flash, redirect, url_for
 from flask_login import login_required, current_user, login_user, logout_user
 from sqlalchemy.exc import IntegrityError
+from werkzeug.security import generate_password_hash, check_password_hash
 
 from api.rest.base import login_manager, app
 from api.rest.functions.UserLogin import UserLogin
+from api.rest.functions.forms import RegistrationForm, ChangeEmailLoginForm, ChangePasswordForm
 from api.rest.functions.images import image_is_png
 from api.rest.models.db_classes import Users, db
 
@@ -21,14 +23,28 @@ def profile():
     return render_template('admin/profile.html', user=current_user.user)
 
 
-@admin.route('/edit_user',  methods=["POST", "GET"])
+@admin.route('/edit_user_log_email',  methods=["POST", "GET"])
 @login_required
-def edit_user():
-    if request.method == "POST":
-        if update_user(login=request.form['login'], email=request.form['email']):
+def edit_user_log_email():
+    form = ChangeEmailLoginForm()
+    if form.validate_on_submit():
+        if update_user(login=form.login.data, email=form.email.data):
             flash("Success!", "success")
             return redirect(url_for('.profile'))
-    return render_template('admin/edit_user.html', user=current_user.user)
+    return render_template('admin/edit_user_log_email.html', form=form, user=current_user.user)
+
+
+@admin.route('/edit_user_psw',  methods=["POST", "GET"])
+@login_required
+def edit_user_psw():
+    form = ChangePasswordForm()
+    if form.validate_on_submit():
+        if check_password_hash(current_user.user.password, form.old_psw.data):
+            if update_user(psw=generate_password_hash(form.psw1.data)):
+                flash("Success!", "success")
+                return redirect(url_for('.profile'))
+        flash('Incorrect old password!!!', category='error')
+    return render_template('admin/edit_user_psw.html', form=form, user=current_user.user)
 
 
 @admin.route('/userava')

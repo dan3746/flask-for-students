@@ -1,29 +1,28 @@
-{% extends 'menu/base.html' %}
+{% extends 'admin/base.html' %}
 
 {% block title %}
-Registration
+Edit profile
 {% endblock %}
 
 {% block body %}
- <div class="container">
-  <h1>Registration</h1>
-     <form action="" method="post" class="form-contact">
-       {{ form.hidden_tag() }}
+    <div class="clearfix gutter d-flex flex-shrink-0 flex-column-reverse flex-md-row">
+    <div class="col-12 col-md-4">
+          <h1>Edit your password:</h1>
+        <form action="" method="post" class="form-contact">
+         {{ form.hidden_tag() }}
          {% for field in form if field.name not in ['csrf_token', 'remember', 'submit'] %}
              <p>{{ field.label() }}
               {% if field.errors %}
                 {{ field(class="invalod") }}
-              <span class="invalid-feedback">
                   {% for e in field.errors %}
-                  {{ e }}
+                        <div class="flash error">{{ e }}</div>
                   {% endfor %}
-              </span>
               {% else %}
                 {{ field() }}
               {% endif %}
          {% endfor %}
          <p>{{ form.submit() }}
-         <p>Already have an account? <a href="/login">Log in </a>now!</p>
      </form>
- </div>
+    </div>
+  </div>
 {% endblock %}

@@ -19,9 +19,7 @@ Login
     <div class="checkbox mb-3">
       <p> {{ form.remember.label() }} {{ form.remember() }}
     </div>
-    <button class="w-100 btn btn-lg btn-primary" type="submit">
-        {{ form.submit() }}
-    </button>
+    {{ form.submit() }}
     <p>Don't have an account? <a href="/registration">Register </a>now!</p>
   </form>
 </main>
