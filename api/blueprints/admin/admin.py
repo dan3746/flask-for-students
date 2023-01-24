@@ -85,14 +85,14 @@ def sign_out():
     return redirect('/')
 
 
-@admin.errorhandler(404)
-def page_not_found():
-    return render_template("404.html")
+@admin.app_errorhandler(404)
+def page_not_found(err):
+    return render_template("admin/404.html")
 
 
-@admin.errorhandler(401)
-def no_access():
-    return render_template("401.html")
+@admin.app_errorhandler(401)
+def no_access(err):
+    return render_template("admin/401.html")
 
 
 def update_user(login=None, psw=None, email=None, image=None):

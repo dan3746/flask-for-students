@@ -1,13 +1,8 @@
-from flask import render_template, request, redirect, flash, url_for, make_response
-from sqlalchemy.exc import IntegrityError
-from werkzeug.security import generate_password_hash, check_password_hash
-from flask_login import login_user, login_required, logout_user, current_user
+from flask import render_template, request, redirect
+from flask_login import current_user
 
-from api.rest.base import login_manager, app
-from api.rest.functions.UserLogin import UserLogin
-from api.rest.functions.forms import LoginForm, RegistrationForm
-from api.rest.functions.images import image_is_png
-from api.rest.models.db_classes import Users, Statistic, db
+from api.rest.base import app
+from api.rest.models.db_classes import Statistic, db
 from api.blueprints.admin.admin import admin
 from api.blueprints.menu.menu import menu
 
@@ -38,16 +33,6 @@ def add_record():
             return "Error during saving progress in db: " + ex
     else:
         return render_template("add_record.html", user=user_is_logged())
-
-
-@app.errorhandler(404)
-def pageNotFound():
-    return render_template("404.html")
-
-
-@app.errorhandler(401)
-def noAccess():
-    return render_template("401.html")
 
 
 if __name__ == '__main__':

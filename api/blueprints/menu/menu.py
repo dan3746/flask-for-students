@@ -1,6 +1,6 @@
 from sqlite3 import IntegrityError
 
-from flask import Blueprint, render_template, request, flash, redirect, url_for
+from flask import Blueprint, render_template, request, flash, redirect, url_for, render_template_string
 from flask_login import current_user, login_user
 from werkzeug.security import check_password_hash, generate_password_hash
 
@@ -90,11 +90,11 @@ def registration():
     return render_template('menu/registration.html', form=form, user=user_is_logged())
 
 
-@menu.errorhandler(404)
-def page_not_found():
-    return render_template("404.html")
+@menu.app_errorhandler(404)
+def page_not_found(err):
+    return render_template("menu/404.html")
 
 
-@menu.errorhandler(401)
-def no_access():
-    return render_template("401.html")
+@menu.app_errorhandler(401)
+def no_access(err):
+    return render_template("menu/401.html")
