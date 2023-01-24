@@ -25,10 +25,13 @@ def about():
     return render_template("menu/about.html", user=user_is_logged())
 
 
-@menu.route('/records')
-def records():
-    statistics = Statistic.query.order_by(Statistic.date).all()
-    return render_template("menu/records.html", statistics=statistics, user=user_is_logged())
+@menu.route('/records/<int:id>')
+def records(id):
+    if id == 0:
+        statistics = Statistic.query.order_by(Statistic.date).all()
+    else:
+        statistics = Statistic.query.where(Statistic.id == current_user.user.id).order_by(Statistic.date).all()
+    return render_template("menu/records.html", statistics=statistics, user=user_is_logged(), id=id)
 
 
 @menu.route('/contact', methods=['POST', "GET"])
