@@ -22,6 +22,13 @@ class RegistrationForm(FlaskForm):
     submit = SubmitField("Register")
 
 
+class ContactForm(FlaskForm):
+    name = StringField("Name: ", validators=[DataRequired(), Length(min=2, max=20)])
+    email = StringField("E-Mail: ", validators=[DataRequired(), Email(), Length(min=2, max=20)])
+    message = StringField("Message: ", validators=[DataRequired(), Length(min=2, max=200)])
+    submit = SubmitField("Send")
+
+
 class ChangeEmailLoginForm(FlaskForm):
     login = StringField(
         "Login: ",

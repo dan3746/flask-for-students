@@ -1,11 +1,15 @@
+from datetime import datetime
 from sqlite3 import IntegrityError
 
 from flask import Blueprint, render_template, request, flash, redirect, url_for, render_template_string
 from flask_login import current_user, login_user
+from flask_mail import Message
 from werkzeug.security import check_password_hash, generate_password_hash
 
+from api.config import Config
+from api.mail import mail
 from api.rest.functions.UserLogin import UserLogin
-from api.rest.functions.forms import LoginForm, RegistrationForm
+from api.rest.functions.forms import LoginForm, RegistrationForm, ContactForm
 from api.rest.models.db_classes import Statistic, Users, db
 
 menu = Blueprint('menu', __name__, template_folder='templates', static_folder='static')
@@ -36,17 +40,14 @@ def records(id):
 
 @menu.route('/contact', methods=['POST', "GET"])
 def contact():
-    if request.method == "POST":
-        print(request.form)
-        name = request.form['username']
-        email = request.form['email']
-        message = request.form['message']
-        print(name + ' ---- ' + email + ' ---- ' + message)
-        if len(message) > 2:
-            flash('Message successfully sent!', category='success')
-        else:
-            flash('Error!', category='error')
-    return render_template("menu/contact.html", user=user_is_logged())
+    form = ContactForm()
+    if form.validate_on_submit():
+        msg = Message('Contact us', sender = Config.MAIL_USERNAME, recipients = [form.email.data, Config.MAIL_USERNAME])
+        msg.body = f'From: {form.name.data}\n\n' + form.message.data + f'\n\nDate: {datetime.now().strftime("%d/%m/%Y %H:%M:%S")}'
+        mail.send(msg)
+        flash('Email successfully sent!', category='success')
+        return redirect(url_for('menu.index'))
+    return render_template("menu/contact.html", form=form, user=user_is_logged())
 
 
 @menu.route('/login', methods=["POST", "GET"])

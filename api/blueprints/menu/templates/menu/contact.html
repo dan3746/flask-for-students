@@ -5,15 +5,21 @@ Contact us
 {% endblock %}
 
 {% block body %}
- <div class="container">
-  <h1>Contact us</h1>
- </div>
-    <form action="/contact" method="post" class="form-contact">
-    <p><label>Name: </label> <input type="text" name="username" value="" required></p>
-    <p><label>E-Mail: </label> <input type="text" name="email" value="" required></p>
-    <p><label>Message: </label>
-    <p><textarea name="message" cols="40" rows="10"></textarea></p>
-    <input type="submit" value="Send">
-    </p>
-    </form>
+<main class="form-signin w-100 m-auto text-center">
+  <form action="" method="post" class="form-contact">
+    {{ form.hidden_tag() }}
+    <h1 class="h3 mb-3 fw-normal">Contact us</h1>
+    <div class="form-floating">
+      <p>{{ form.name.label() }} {{ form.name() }}
+    </div>
+    <div class="form-floating">
+      <p>{{ form.email.label() }} {{ form.email() }}
+    </div>
+    <div class="form-floating">
+      <p>{{ form.message.label() }} {{ form.message() }}
+    </div>
+    {{ form.submit() }}
+    <p>Don't have an account? <a href="/registration">Register </a>now!</p>
+  </form>
+</main>
 {% endblock %}

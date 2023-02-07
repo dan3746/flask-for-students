@@ -1,0 +1,16 @@
+from flask import Config as FlaskConfig
+
+
+class Config(FlaskConfig):
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///DataBase.db'
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
+    SECRET_KEY = 'fgefsfdeg3r23rf5g6h73g'
+
+    MAIL_SERVER = 'smtp.gmail.com'
+    MAIL_PORT = 465
+    MAIL_USERNAME = 'flaskforstudents@gmail.com'
+    MAIL_PASSWORD = 'DANfed27'
+    MAIL_USE_TLS = False
+    MAIL_USE_SSL = True
+
+

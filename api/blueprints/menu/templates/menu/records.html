@@ -10,7 +10,7 @@ Records
     <h1>Records</h1>
     {% if id == 0 and user %}
       <a type="button" class="btn btn-info"  href="/records/1" role="button">Show only my records</a>
-    {% else %}
+    {% elif user %}
       <a type="button" class="btn btn-info"  href="/records/0" role="button">Show all records</a>
     {% endif %}
     {% if statistics %}
