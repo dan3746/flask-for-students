@@ -1,14 +1,13 @@
-from flask_mail import Mail
+import smtplib
 
 from api.config import Config
-from api.rest.base import app
+
+def send_mail(fromaddr, toaddrs, msg):
+    server = smtplib.SMTP(Config.MAIL_SERVER, Config.MAIL_PORT)
+    server.ehlo()
+    server.starttls()
+    server.login(Config.MAIL_USERNAME, Config.EMAIL_HOST_PASSWORD)
+    server.sendmail(fromaddr, toaddrs, msg)
+    server.quit()
 
 
-app.config['MAIL_SERVER'] = Config.MAIL_SERVER
-app.config['MAIL_PORT'] = Config.MAIL_PORT
-app.config['MAIL_USERNAME'] = Config.MAIL_USERNAME
-app.config['MAIL_PASSWORD'] = Config.MAIL_PASSWORD
-app.config['MAIL_USE_TLS'] = Config.MAIL_USE_TLS
-app.config['MAIL_USE_SSL'] = Config.MAIL_USE_SSL
-
-mail = Mail(app)

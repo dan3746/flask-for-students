@@ -5,7 +5,7 @@ Contact us
 {% endblock %}
 
 {% block body %}
-<main class="form-signin w-100 m-auto text-center">
+<main class="container">
   <form action="" method="post" class="form-contact">
     {{ form.hidden_tag() }}
     <h1 class="h3 mb-3 fw-normal">Contact us</h1>
@@ -19,7 +19,6 @@ Contact us
       <p>{{ form.message.label() }} {{ form.message() }}
     </div>
     {{ form.submit() }}
-    <p>Don't have an account? <a href="/registration">Register </a>now!</p>
   </form>
 </main>
 {% endblock %}

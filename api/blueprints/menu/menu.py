@@ -7,7 +7,7 @@ from flask_mail import Message
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from api.config import Config
-from api.mail import mail
+from api.mail import send_mail
 from api.rest.functions.UserLogin import UserLogin
 from api.rest.functions.forms import LoginForm, RegistrationForm, ContactForm
 from api.rest.models.db_classes import Statistic, Users, db
@@ -42,9 +42,8 @@ def records(id):
 def contact():
     form = ContactForm()
     if form.validate_on_submit():
-        msg = Message('Contact us', sender = Config.MAIL_USERNAME, recipients = [form.email.data, Config.MAIL_USERNAME])
-        msg.body = f'From: {form.name.data}\n\n' + form.message.data + f'\n\nDate: {datetime.now().strftime("%d/%m/%Y %H:%M:%S")}'
-        mail.send(msg)
+        msg = f'From: {form.name.data}\n\n' + form.message.data + f'\n\nDate: {datetime.now().strftime("%d/%m/%Y %H:%M:%S")}'
+        send_mail(form.email.data, Config.MAIL_USERNAME, msg)
         flash('Email successfully sent!', category='success')
         return redirect(url_for('menu.index'))
     return render_template("menu/contact.html", form=form, user=user_is_logged())

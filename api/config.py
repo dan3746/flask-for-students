@@ -7,9 +7,10 @@ class Config(FlaskConfig):
     SECRET_KEY = 'fgefsfdeg3r23rf5g6h73g'
 
     MAIL_SERVER = 'smtp.gmail.com'
-    MAIL_PORT = 465
+    MAIL_PORT = 587
     MAIL_USERNAME = 'flaskforstudents@gmail.com'
     MAIL_PASSWORD = 'DANfed27'
+    EMAIL_HOST_PASSWORD = 'galwcmeoyyzsgdtp'
     MAIL_USE_TLS = False
     MAIL_USE_SSL = True
 
