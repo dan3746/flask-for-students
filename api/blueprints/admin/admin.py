@@ -11,6 +11,9 @@ from api.rest.models.db_classes import Users, db
 
 admin = Blueprint('admin', __name__, template_folder='templates', static_folder='static')
 
+def user_is_logged():
+    return current_user.user if current_user.is_authenticated else None
+
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -87,12 +90,12 @@ def sign_out():
 
 @admin.app_errorhandler(404)
 def page_not_found(err):
-    return render_template("admin/404.html")
+    return render_template("admin/404.html", user=user_is_logged())
 
 
 @admin.app_errorhandler(401)
 def no_access(err):
-    return render_template("admin/401.html")
+    return render_template("admin/401.html", user=user_is_logged())
 
 
 def update_user(login=None, psw=None, email=None, image=None):

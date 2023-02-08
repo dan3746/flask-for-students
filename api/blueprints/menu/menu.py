@@ -7,7 +7,7 @@ from flask_mail import Message
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from api.config import Config
-from api.mail import send_mail
+from api.mail import send_mail, get_greeting_message
 from api.rest.functions.UserLogin import UserLogin
 from api.rest.functions.forms import LoginForm, RegistrationForm, ContactForm
 from api.rest.models.db_classes import Statistic, Users, db
@@ -42,7 +42,7 @@ def records(id):
 def contact():
     form = ContactForm()
     if form.validate_on_submit():
-        msg = f'From: {form.name.data}\n\n' + form.message.data + f'\n\nDate: {datetime.now().strftime("%d/%m/%Y %H:%M:%S")}'
+        msg = f'{form.name.data}\n\n{form.message.data} \n\nDate: {datetime.now().strftime("%d/%m/%Y %H:%M:%S")}'
         send_mail(form.email.data, Config.MAIL_USERNAME, msg)
         flash('Email successfully sent!', category='success')
         return redirect(url_for('menu.index'))
@@ -88,6 +88,7 @@ def registration():
                 return render_template('menu/registration.html', user=user_is_logged())
             flash(f'Error with database {ex} !!!', category='error')
             return render_template('menu/registration.html', user=user_is_logged())
+        send_mail(Config.MAIL_USERNAME, email, get_greeting_message(login))
         flash('Your account has been successfully registered!', category='success')
         return redirect(url_for('admin.profile'))
     return render_template('menu/registration.html', form=form, user=user_is_logged())
@@ -95,9 +96,9 @@ def registration():
 
 @menu.app_errorhandler(404)
 def page_not_found(err):
-    return render_template("menu/404.html")
+    return render_template("menu/404.html", user=user_is_logged())
 
 
 @menu.app_errorhandler(401)
 def no_access(err):
-    return render_template("menu/401.html")
+    return render_template("menu/401.html", user=user_is_logged())
