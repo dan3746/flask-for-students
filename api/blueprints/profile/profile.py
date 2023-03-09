@@ -20,9 +20,9 @@ def load_user(user_id):
     return UserLogin().fromDB(user_id, Users)
 
 
-@profile.route('/user')
+@profile.route('/<string:login>')
 @login_required
-def user():
+def user(login):
     return render_template('profile/user.html', user=current_user.user)
 
 
@@ -33,7 +33,7 @@ def edit_user_log_email():
     if form.validate_on_submit():
         if update_user(login=form.login.data, email=form.email.data):
             flash("Success!", "success")
-            return redirect(url_for('.user'))
+            return redirect(url_for('.user', login=current_user.get_login()))
     return render_template('profile/edit_user_log_email.html', form=form, user=current_user.user)
 
 
@@ -45,7 +45,7 @@ def edit_user_psw():
         if check_password_hash(current_user.user.password, form.old_psw.data):
             if update_user(psw=generate_password_hash(form.psw1.data)):
                 flash("Success!", "success")
-                return redirect(url_for('.user'))
+                return redirect(url_for('.user', login=current_user.get_login()))
         flash('Incorrect old password!!!', category='error')
     return render_template('profile/edit_user_psw.html', form=form, user=current_user.user)
 
@@ -71,14 +71,14 @@ def upload_image():
             if file:
                 if update_user(image=file):
                     flash("Success!", "success")
-                    return redirect(url_for('.user'))
+                    return redirect(url_for('.user', login=current_user.get_login()))
                 flash("Error while updating user image!", "error")
             else:
                 flash("Error while reading image file!", "error")
         else:
             flash("No new file for update!", "error")
 
-    return redirect(url_for('.user'))
+    return redirect(url_for('.user', login=current_user.get_login()))
 
 
 @profile.route('/sign_out')
