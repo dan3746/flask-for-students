@@ -9,7 +9,7 @@ from api.rest.functions.forms import RegistrationForm, ChangeEmailLoginForm, Cha
 from api.rest.functions.images import image_is_png
 from api.rest.models.db_classes import Users, db
 
-admin = Blueprint('admin', __name__, template_folder='templates', static_folder='static')
+profile = Blueprint('profile', __name__, template_folder='templates', static_folder='static')
 
 def user_is_logged():
     return current_user.user if current_user.is_authenticated else None
@@ -20,24 +20,24 @@ def load_user(user_id):
     return UserLogin().fromDB(user_id, Users)
 
 
-@admin.route('/profile')
+@profile.route('/user')
 @login_required
-def profile():
-    return render_template('admin/profile.html', user=current_user.user)
+def user():
+    return render_template('profile/user.html', user=current_user.user)
 
 
-@admin.route('/edit_user_log_email',  methods=["POST", "GET"])
+@profile.route('/edit_user_log_email',  methods=["POST", "GET"])
 @login_required
 def edit_user_log_email():
     form = ChangeEmailLoginForm()
     if form.validate_on_submit():
         if update_user(login=form.login.data, email=form.email.data):
             flash("Success!", "success")
-            return redirect(url_for('.profile'))
-    return render_template('admin/edit_user_log_email.html', form=form, user=current_user.user)
+            return redirect(url_for('.user'))
+    return render_template('profile/edit_user_log_email.html', form=form, user=current_user.user)
 
 
-@admin.route('/edit_user_psw',  methods=["POST", "GET"])
+@profile.route('/edit_user_psw',  methods=["POST", "GET"])
 @login_required
 def edit_user_psw():
     form = ChangePasswordForm()
@@ -45,12 +45,12 @@ def edit_user_psw():
         if check_password_hash(current_user.user.password, form.old_psw.data):
             if update_user(psw=generate_password_hash(form.psw1.data)):
                 flash("Success!", "success")
-                return redirect(url_for('.profile'))
+                return redirect(url_for('.user'))
         flash('Incorrect old password!!!', category='error')
-    return render_template('admin/edit_user_psw.html', form=form, user=current_user.user)
+    return render_template('profile/edit_user_psw.html', form=form, user=current_user.user)
 
 
-@admin.route('/userava')
+@profile.route('/userava')
 @login_required
 def userava():
     img = current_user.get_user_image(app)
@@ -62,7 +62,7 @@ def userava():
     return h
 
 
-@admin.route('/upload_image', methods=["POST", "GET"])
+@profile.route('/upload_image', methods=["POST", "GET"])
 @login_required
 def upload_image():
     if request.method == 'POST':
@@ -71,31 +71,31 @@ def upload_image():
             if file:
                 if update_user(image=file):
                     flash("Success!", "success")
-                    return redirect(url_for('.profile'))
+                    return redirect(url_for('.user'))
                 flash("Error while updating user image!", "error")
             else:
                 flash("Error while reading image file!", "error")
         else:
             flash("No new file for update!", "error")
 
-    return redirect(url_for('.profile'))
+    return redirect(url_for('.user'))
 
 
-@admin.route('/sign_out')
+@profile.route('/sign_out')
 def sign_out():
     logout_user()
     flash('Logout successfully!', category='success')
     return redirect('/')
 
 
-@admin.app_errorhandler(404)
+@profile.app_errorhandler(404)
 def page_not_found(err):
-    return render_template("admin/404.html", user=user_is_logged())
+    return render_template("profile/404.html", user=user_is_logged())
 
 
-@admin.app_errorhandler(401)
+@profile.app_errorhandler(401)
 def no_access(err):
-    return render_template("admin/401.html", user=user_is_logged())
+    return render_template("profile/401.html", user=user_is_logged())
 
 
 def update_user(login=None, psw=None, email=None, image=None):
