@@ -1,9 +1,8 @@
 from datetime import datetime
 from sqlite3 import IntegrityError
 
-from flask import Blueprint, render_template, request, flash, redirect, url_for, render_template_string
+from flask import Blueprint, render_template, flash, redirect, url_for
 from flask_login import current_user, login_user
-from flask_mail import Message
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from api.config import Config
@@ -11,12 +10,9 @@ from api.mail import send_mail, get_greeting_message
 from api.rest.functions.UserLogin import UserLogin
 from api.rest.functions.forms import LoginForm, RegistrationForm, ContactForm
 from api.rest.models.db_classes import Statistic, Users, db
+from api.rest.views.user import user_is_logged
 
 menu = Blueprint('menu', __name__, template_folder='templates', static_folder='static')
-
-
-def user_is_logged():
-    return current_user.user if current_user.is_authenticated else None
 
 
 @menu.route('/')
@@ -34,7 +30,7 @@ def records(id):
     if id == 0:
         statistics = Statistic.query.order_by(Statistic.date).all()
     else:
-        statistics = Statistic.query.where(Statistic.id == current_user.user.id).order_by(Statistic.date).all()
+        statistics = Statistic.query.where(Statistic.id == current_user.get_id()).order_by(Statistic.date).all()
     return render_template("menu/records.html", statistics=statistics, user=user_is_logged(), id=id)
 
 
@@ -52,19 +48,15 @@ def contact():
 @menu.route('/login', methods=["POST", "GET"])
 def login():
     if current_user.is_authenticated:
-        return redirect(url_for('admin.profile'))
+        return redirect(url_for('admin.profile', login=current_user.get_login()))
     form = LoginForm()
     if form.validate_on_submit():
-        user = Users.query.where(Users.login == form.login.data).limit(1)
-        try:
-            user = user[0]
-        except IndexError as er:
-            user = None
+        user = UserLogin().fromDB(Users, login=form.login.data).user
         if user and check_password_hash(user.password, form.psw.data):
             user_login = UserLogin().create(user)
             login_user(user_login, remember=form.remember.data)
             flash('Success!', category='success')
-            return redirect(url_for('admin.profile'))
+            return redirect(url_for('admin.profile', login=current_user.get_login()))
         flash('Error! Account not found!', category='error')
     return render_template("menu/login.html", form=form, user=user_is_logged())
 
@@ -90,7 +82,7 @@ def registration():
             return render_template('menu/registration.html', user=user_is_logged())
         send_mail(Config.MAIL_USERNAME, email, get_greeting_message(login))
         flash('Your account has been successfully registered!', category='success')
-        return redirect(url_for('admin.profile'))
+        return redirect(url_for('admin.profile', login=current_user.get_login()))
     return render_template('menu/registration.html', form=form, user=user_is_logged())
 
 

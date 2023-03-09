@@ -5,26 +5,28 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 from api.rest.base import login_manager, app
 from api.rest.functions.UserLogin import UserLogin
-from api.rest.functions.forms import RegistrationForm, ChangeEmailLoginForm, ChangePasswordForm
+from api.rest.functions.forms import ChangeEmailLoginForm, ChangePasswordForm
 from api.rest.functions.images import image_is_png
 from api.rest.models.db_classes import Users, db
+from api.rest.views.user import user_is_logged
 
 admin = Blueprint('admin', __name__, template_folder='templates', static_folder='static')
 
-def user_is_logged():
-    return current_user.user if current_user.is_authenticated else None
-
-
 @login_manager.user_loader
 def load_user(user_id):
-    return UserLogin().fromDB(user_id, Users)
+    return UserLogin().fromDB(Users, user_id)
 
-
-@admin.route('/profile')
-@login_required
-def profile():
-    return render_template('admin/profile.html', user=current_user.user)
-
+@admin.route('/profile/<string:login>')
+def profile(login):
+    aim_user = UserLogin().fromDB(Users, login=login)
+    if aim_user:
+        user = user_is_logged()
+        if user:
+            if user.get_login() == login:
+                return render_template('admin/profile.html', user=user.get_user())
+            return render_template('admin/profile_guest.html', user=user.get_user(), profile=aim_user.get_user())
+        return render_template('admin/profile_guest.html', profile=aim_user.get_user())
+    return redirect(url_for('.404'))
 
 @admin.route('/edit_user_log_email',  methods=["POST", "GET"])
 @login_required
@@ -33,7 +35,7 @@ def edit_user_log_email():
     if form.validate_on_submit():
         if update_user(login=form.login.data, email=form.email.data):
             flash("Success!", "success")
-            return redirect(url_for('.profile'))
+            return redirect(url_for('.profile', login=current_user.get_login()))
     return render_template('admin/edit_user_log_email.html', form=form, user=current_user.user)
 
 
@@ -42,18 +44,21 @@ def edit_user_log_email():
 def edit_user_psw():
     form = ChangePasswordForm()
     if form.validate_on_submit():
-        if check_password_hash(current_user.user.password, form.old_psw.data):
+        if check_password_hash(current_user.get_psw(), form.old_psw.data):
             if update_user(psw=generate_password_hash(form.psw1.data)):
                 flash("Success!", "success")
-                return redirect(url_for('.profile'))
+                return redirect(url_for('.profile', login=current_user.get_login()))
         flash('Incorrect old password!!!', category='error')
     return render_template('admin/edit_user_psw.html', form=form, user=current_user.user)
 
 
-@admin.route('/userava')
+@admin.route('/userava/<string:id>')
 @login_required
-def userava():
-    img = current_user.get_user_image(app)
+def userava(id):
+    if id == '0':
+        img = current_user.get_user_image(app)
+    else:
+        img = UserLogin().fromDB(Users, id=id).get_user_image(app)
     if not img:
         return ""
 
@@ -71,14 +76,14 @@ def upload_image():
             if file:
                 if update_user(image=file):
                     flash("Success!", "success")
-                    return redirect(url_for('.profile'))
+                    return redirect(url_for('.profile', login=current_user.get_login()))
                 flash("Error while updating user image!", "error")
             else:
                 flash("Error while reading image file!", "error")
         else:
             flash("No new file for update!", "error")
 
-    return redirect(url_for('.profile'))
+    return redirect(url_for('.profile', login=current_user.get_login()))
 
 
 @admin.route('/sign_out')

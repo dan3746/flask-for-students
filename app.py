@@ -5,15 +5,12 @@ from api.rest.base import app
 from api.rest.models.db_classes import Statistic, db
 from api.blueprints.admin.admin import admin
 from api.blueprints.menu.menu import menu
+from api.rest.views.user import user_is_logged
 
 MAX_CONTENT_LENGTH = 1024 * 1024
 
 app.register_blueprint(admin, url_prefix='/admin')
 app.register_blueprint(menu, url_prefix='')
-
-
-def user_is_logged():
-    return current_user.user if current_user.is_authenticated else None
 
 
 @app.route('/add_record', methods=['POST'])

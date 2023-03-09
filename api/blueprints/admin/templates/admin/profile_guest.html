@@ -1,0 +1,26 @@
+{% extends 'admin/base.html' %}
+
+{% block title %}
+{{ profile.login }}
+{% endblock %}
+
+{% block body %}
+ <div class="container">
+        {% if profile %}
+            <table border="0" class="profile-table">
+                <tr><td valign="top">
+                    <div class="profile-ava"><img src="{{ url_for('.userava', id=profile.id)}}"></div>
+                </td>
+                <td valign="top" class="profile-panel">
+                    <ul class="profile-info">
+                    <li>Login: {{ profile.login }}</li>
+                    <li>Email: {{ profile.email }}</li>
+                    </ul>
+                </td>
+                </tr>
+            </table>
+        {% else %}
+            <h2>There is no info!</h2>
+        {% endif %}
+    </div>
+{% endblock %}

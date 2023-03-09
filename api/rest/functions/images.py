@@ -1,7 +1,6 @@
 import os
 
 from PIL import Image
-from flask import url_for
 
 
 def image_is_png(img, app):
