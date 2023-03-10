@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, make_response, request, flash, redirect, url_for
+from flask import Blueprint, render_template, make_response, request, flash, redirect, url_for, abort
 from flask_login import login_required, current_user, login_user, logout_user
 from sqlalchemy.exc import IntegrityError
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -21,9 +21,14 @@ def load_user(user_id):
 
 
 @profile.route('/<string:login>')
-@login_required
 def user(login):
-    return render_template('profile/user.html', user=current_user.user)
+    user_need = get_user_from_db(Users, login=login)
+    if user_need:
+        user_logged = user_is_logged()
+        if user_logged and user_logged.login == login:
+            return render_template('profile/user.html', user=user_is_logged())
+        return render_template('profile/user_page_guest.html', user=user_is_logged(), user_need=user_need)
+    abort(404)
 
 
 @profile.route('/edit_user_log_email',  methods=["POST", "GET"])
@@ -54,6 +59,17 @@ def edit_user_psw():
 @login_required
 def userava():
     img = current_user.get_user_image(app)
+    if not img:
+        return ""
+
+    h = make_response(img)
+    h.headers['Content-Type'] = 'image/png'
+    return h
+
+
+@profile.route('/userava_guest/<string:login>')
+def userava_guest(login):
+    img = UserLogin(get_user_from_db(Users, login=login)).get_user_image(app)
     if not img:
         return ""
 

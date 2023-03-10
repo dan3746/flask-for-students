@@ -11,6 +11,9 @@ class UserLogin(UserMixin):
     def get_login(self):
         return self.user.login
 
+    def get_user(self):
+        return self.user
+
     def get_user_image(self, app):
         img = None
         if self.user.image:

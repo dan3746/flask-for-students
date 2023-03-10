@@ -1,0 +1,16 @@
+{% extends 'profile/base.html' %}
+
+{% block title %}
+Profile
+{% endblock %}
+
+{% block body %}
+ <div class="container">
+        <table border="0" class="profile-table">
+            <tr><td valign="top">
+                <div class="profile-ava"><img src="{{ url_for('.userava_guest', login=user_need.login)}}"></div>
+            </td>
+            </tr>
+        </table>
+    </div>
+{% endblock %}
