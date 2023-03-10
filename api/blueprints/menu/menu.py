@@ -1,14 +1,13 @@
 from datetime import datetime
 from sqlite3 import IntegrityError
 
-from flask import Blueprint, render_template, request, flash, redirect, url_for, render_template_string
+from flask import Blueprint, render_template, flash, redirect, url_for
 from flask_login import current_user, login_user
-from flask_mail import Message
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from api.config import Config
 from api.mail import send_mail, get_greeting_message
-from api.rest.functions.UserLogin import UserLogin
+from api.rest.functions.UserLogin import UserLogin, get_user_from_db
 from api.rest.functions.forms import LoginForm, RegistrationForm, ContactForm
 from api.rest.models.db_classes import Statistic, Users, db
 
@@ -55,13 +54,9 @@ def login():
         return redirect(url_for('profile.user', login=current_user.get_login()))
     form = LoginForm()
     if form.validate_on_submit():
-        user = Users.query.where(Users.login == form.login.data).limit(1)
-        try:
-            user = user[0]
-        except IndexError as er:
-            user = None
+        user = get_user_from_db(Users, login=form.login.data)
         if user and check_password_hash(user.password, form.psw.data):
-            user_login = UserLogin().create(user)
+            user_login = UserLogin(user)
             login_user(user_login, remember=form.remember.data)
             flash('Success!', category='success')
             return redirect(url_for('profile.user', login=current_user.get_login()))
@@ -80,7 +75,7 @@ def registration():
         try:
             db.session.add(info)
             db.session.commit()
-            login_user(UserLogin().create(info))
+            login_user(UserLogin(info))
         except Exception as ex:
             db.session.rollback()
             if type(ex) == IntegrityError:

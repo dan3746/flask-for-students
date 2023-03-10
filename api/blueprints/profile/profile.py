@@ -4,8 +4,8 @@ from sqlalchemy.exc import IntegrityError
 from werkzeug.security import generate_password_hash, check_password_hash
 
 from api.rest.base import login_manager, app
-from api.rest.functions.UserLogin import UserLogin
-from api.rest.functions.forms import RegistrationForm, ChangeEmailLoginForm, ChangePasswordForm
+from api.rest.functions.UserLogin import UserLogin, get_user_from_db
+from api.rest.functions.forms import ChangeEmailLoginForm, ChangePasswordForm
 from api.rest.functions.images import image_is_png
 from api.rest.models.db_classes import Users, db
 
@@ -17,7 +17,7 @@ def user_is_logged():
 
 @login_manager.user_loader
 def load_user(user_id):
-    return UserLogin().fromDB(user_id, Users)
+    return UserLogin(get_user_from_db(Users, id=user_id))
 
 
 @profile.route('/<string:login>')

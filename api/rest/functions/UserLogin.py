@@ -1,17 +1,9 @@
-from flask import url_for
 from flask_login import UserMixin
 
 
 class UserLogin(UserMixin):
-    def fromDB(self, id, db):
-        user = db.query.where(db.id == id).limit(1)
-        us = user[0]
-        self.user = us
-        return self
-
-    def create(self, user):
+    def __init__(self, user):
         self.user = user
-        return self
 
     def get_id(self):
         return self.user.id
@@ -30,3 +22,15 @@ class UserLogin(UserMixin):
             except FileNotFoundError as e:
                 print(f"File was not found: {e}")
         return img
+
+
+
+def get_user_from_db(db, id = None, login = None):
+    if id:
+        user_ar = db.query.where(db.id == id).limit(1)
+    else:
+        user_ar = db.query.where(db.login == login).limit(1)
+    try:
+        return user_ar[0]
+    except IndexError as er:
+        return None
