@@ -1,3 +1,6 @@
+import os
+
+import pika
 from flask import render_template, request, redirect
 from flask_login import current_user
 
@@ -6,7 +9,6 @@ from api.rest.models.db_classes import Statistic, db
 from api.blueprints.profile.profile import profile
 from api.blueprints.menu.menu import menu
 
-MAX_CONTENT_LENGTH = 1024 * 1024
 
 app.register_blueprint(profile, url_prefix='/profile')
 app.register_blueprint(menu, url_prefix='')

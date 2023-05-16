@@ -10,6 +10,7 @@ from api.mail import send_mail, get_greeting_message
 from api.rest.functions.UserLogin import UserLogin, get_user_from_db
 from api.rest.functions.forms import LoginForm, RegistrationForm, ContactForm
 from api.rest.models.db_classes import Statistic, Users, db
+from rabbit.rmq_publish import publisher
 
 menu = Blueprint('menu', __name__, template_folder='templates', static_folder='static')
 
@@ -20,6 +21,7 @@ def user_is_logged():
 
 @menu.route('/')
 def index():
+    publisher.publish('New Data')
     return render_template("menu/index.html", user=user_is_logged())
 
 

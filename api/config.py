@@ -14,4 +14,7 @@ class Config(FlaskConfig):
     MAIL_USE_TLS = False
     MAIL_USE_SSL = True
 
+    MAX_CONTENT_LENGTH = 1024 * 1024
+
+
 
