@@ -3,17 +3,16 @@ FROM python:3
 MAINTAINER Danila Fedorov 'danilafedorof@yandex.ru'
 
 
-WORKDIR /py
+WORKDIR /usr/src/app
 
 
 EXPOSE 4000
 
 
-COPY requirements.txt .
+COPY requirements.txt ./
 
-RUN pip install -r requirements.txt
-
+RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-CMD [ "python", "api/app.py" ]
+CMD [ "python", "app.py" ]
