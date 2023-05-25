@@ -97,6 +97,24 @@ def upload_image():
     return redirect(url_for('.user', login=current_user.get_login()))
 
 
+@profile.route('/upload_djv', methods=["POST", "GET"])
+@login_required
+def upload_image():
+    if request.method == 'POST':
+        if request.files['book']:
+            file = image_is_png(request.files['image'], app)
+            if file:
+                if update_user(image=file):
+                    flash("Success!", "success")
+                    return redirect(url_for('.user', login=current_user.get_login()))
+                flash("Error while updating user image!", "error")
+            else:
+                flash("Error while reading image file!", "error")
+        else:
+            flash("No new file for update!", "error")
+
+    return redirect(url_for('.user', login=current_user.get_login()))
+
 @profile.route('/sign_out')
 def sign_out():
     logout_user()
