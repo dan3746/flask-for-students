@@ -11,6 +11,7 @@ from api.rest.models.db_classes import Users, db
 
 profile = Blueprint('profile', __name__, template_folder='templates', static_folder='static')
 
+
 def user_is_logged():
     return current_user.user if current_user.is_authenticated else None
 
@@ -31,7 +32,7 @@ def user(login):
     abort(404)
 
 
-@profile.route('/edit_user_log_email',  methods=["POST", "GET"])
+@profile.route('/edit_user_log_email', methods=["POST", "GET"])
 @login_required
 def edit_user_log_email():
     form = ChangeEmailLoginForm()
@@ -42,7 +43,7 @@ def edit_user_log_email():
     return render_template('profile/edit_user_log_email.html', form=form, user=current_user.user)
 
 
-@profile.route('/edit_user_psw',  methods=["POST", "GET"])
+@profile.route('/edit_user_psw', methods=["POST", "GET"])
 @login_required
 def edit_user_psw():
     form = ChangePasswordForm()
@@ -97,9 +98,14 @@ def upload_image():
     return redirect(url_for('.user', login=current_user.get_login()))
 
 
+@profile.route('/books')
+def books():
+    return render_template('profile/books.html')
+
+
 @profile.route('/upload_djv', methods=["POST", "GET"])
 @login_required
-def upload_image():
+def upload_book():
     if request.method == 'POST':
         if request.files['book']:
             file = image_is_png(request.files['image'], app)
@@ -114,6 +120,7 @@ def upload_image():
             flash("No new file for update!", "error")
 
     return redirect(url_for('.user', login=current_user.get_login()))
+
 
 @profile.route('/sign_out')
 def sign_out():
@@ -153,5 +160,3 @@ def update_user(login=None, psw=None, email=None, image=None):
         flash(f'Error with database {ex} !!!', category='error')
         return False
     return True
-
-
