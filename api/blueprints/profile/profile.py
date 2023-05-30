@@ -5,9 +5,10 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 from api.rest.base import login_manager, app
 from api.rest.functions.UserLogin import UserLogin, get_user_from_db
+from api.rest.functions.djv_to_pdf import djv_pdf
 from api.rest.functions.forms import ChangeEmailLoginForm, ChangePasswordForm
 from api.rest.functions.images import image_is_png
-from api.rest.models.db_classes import Users, db
+from api.rest.models.db_classes import Users, db, Books
 
 profile = Blueprint('profile', __name__, template_folder='templates', static_folder='static')
 
@@ -100,26 +101,36 @@ def upload_image():
 
 @profile.route('/books')
 def books():
-    return render_template('profile/books.html')
+    return render_template('profile/books.html', books=current_user.get_books(), user=current_user.user)
 
 
 @profile.route('/upload_djv', methods=["POST", "GET"])
 @login_required
-def upload_book():
+def upload_djv():
     if request.method == 'POST':
         if request.files['book']:
-            file = image_is_png(request.files['image'], app)
-            if file:
-                if update_user(image=file):
+            book = djv_pdf(request.files['book'])
+            if book:
+                if add_book(book):
                     flash("Success!", "success")
-                    return redirect(url_for('.user', login=current_user.get_login()))
-                flash("Error while updating user image!", "error")
+                    return redirect(url_for('.books', books=current_user.get_books(), user=current_user.user))
+                flash("Error while uploading book!", "error")
             else:
-                flash("Error while reading image file!", "error")
+                flash("Error while reading book file!", "error")
         else:
-            flash("No new file for update!", "error")
+            flash("No new book for upload!", "error")
 
-    return redirect(url_for('.user', login=current_user.get_login()))
+    return redirect(url_for('.books', login=current_user.get_login()))
+
+
+@app.route('/docs/<id>')
+def get_pdf(id):
+    binary_pdf = get_book_from_db(Books, id=id)
+    response = make_response(binary_pdf)
+    response.headers['Content-Type'] = 'application/pdf'
+    response.headers['Content-Disposition'] = \
+        'inline; filename=%s.pdf' % 'yourfilename'
+    return response
 
 
 @profile.route('/sign_out')
@@ -160,3 +171,24 @@ def update_user(login=None, psw=None, email=None, image=None):
         flash(f'Error with database {ex} !!!', category='error')
         return False
     return True
+
+
+def add_book(book):
+    info = Books(name=book.filename, user_id=current_user.get_id(), book=book)
+    try:
+        db.session.add(info)
+        db.session.commit()
+    except Exception as ex:
+        db.session.rollback()
+        if type(ex) == IntegrityError:
+            flash(f'Book with this name already exists !!!', category='error')
+            return False
+        return True
+
+def get_book_from_db(db, id = None):
+    book = db.query.where(db.book_id == id).limit(1)
+    try:
+        return book[0]
+    except IndexError as er:
+        return None
+

@@ -25,3 +25,13 @@ class Users(db.Model):
     password = db.Column(db.String, nullable=False)
     email = db.Column(db.String, nullable=False, unique=True)
     image = db.Column(db.LargeBinary, nullable=True, default=None)
+
+
+class Books(db.Model):
+    book_id = db.Column(db.Integer, nullable=False, primary_key=True, unique=True)
+    name = db.Column(db.String, nullable=False)
+    author = db.Column(db.String, default='-')
+    year = db.Column(db.Integer, default='-')
+    user_id = db.Column(db.Integer, nullable=False)
+    private = db.Column(db.Integer, nullable=False, default=1)
+    book = db.Column(db.LargeBinary, nullable=False)

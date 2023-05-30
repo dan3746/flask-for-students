@@ -4,6 +4,7 @@ from flask_login import UserMixin
 class UserLogin(UserMixin):
     def __init__(self, user):
         self.user = user
+        self.books = []
 
     def get_id(self):
         return self.user.id
@@ -13,6 +14,9 @@ class UserLogin(UserMixin):
 
     def get_user(self):
         return self.user
+
+    def get_books(self):
+        return self.books
 
     def get_user_image(self, app):
         img = None

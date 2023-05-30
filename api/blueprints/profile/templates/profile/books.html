@@ -13,5 +13,34 @@ Profile
                 <p><input type="submit" value="Upload"></p>
             </form>
         </div>
+        <h1>Books</h1>
+        {% if books %}
+        <table class="table">
+          <thead class="thead-light">
+            <tr>
+              <th scope="col"></th>
+              <th scope="col">Name</th>
+              <th scope="col">Author</th>
+              <th scope="col">Year</th>
+              <th scope="col">Private</th>
+              <th scope="col"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for el in books %}
+                <tr>
+                    <th scope="row"></th>
+                    <td>{{ el.name }}</td>
+                    <td>{{ el.author }}</td>
+                    <td>{{ el.year }}</td>
+                    <td>{{ el.private }}</td>
+                    <td><a href="/docs/{{ el.book_id }}"></a>read</td>
+                </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+    {% else %}
+        <h2>There are no books!</h2>
+    {% endif %}
     </div>
 {% endblock %}
